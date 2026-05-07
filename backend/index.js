@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import path from "path";
-
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
 import taskRoutes from "./routes/task.route.js";
@@ -15,7 +14,6 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
@@ -35,7 +33,10 @@ app.use(
     credentials: true,
   }),
 );
-
+app.use((req, res, next) => {
+  console.log("backend connected");
+  next();
+});
 // Middleware to handle JSON object in req body
 app.use(express.json());
 
