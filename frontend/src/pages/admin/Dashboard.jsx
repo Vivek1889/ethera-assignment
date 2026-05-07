@@ -5,7 +5,7 @@ import axiosInstance from "../../utils/axioInstance";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
 import RecentTasks from "../../components/RecentTasks";
-import CustomPieChart from "../../components/CustomPieChart";
+
 import CustomBarChart from "../../components/CustomBarChart";
 
 const COLORS = ["#FF6384", "#36A2EB", "#FFCE56"];
@@ -31,12 +31,6 @@ const Dashboard = () => {
     ];
 
     setPieChartData(taskDistributionData);
-
-    const priorityLevelData = [
-      { priority: "Low", count: taskPriorityLevels?.Low || 0 },
-      { priority: "Medium", count: taskPriorityLevels?.Medium || 0 },
-      { priority: "High", count: taskPriorityLevels?.High || 0 },
-    ];
 
     setBarChartData(priorityLevelData);
   };
