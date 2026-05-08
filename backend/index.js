@@ -4,64 +4,131 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
 import taskRoutes from "./routes/task.route.js";
 import reportRoutes from "./routes/report.route.js";
-import { fileURLToPath } from "url";
 
 dotenv.config();
 
+const app = express();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const uploadsPath = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+}
+
+/* ================= DATABASE ================= */
+
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log("Database is connected");
+    console.log("Database connected");
   })
   .catch((err) => {
-    console.log(err);
+    console.log("Mongo Error:", err);
   });
 
-const app = express();
+/* ================= TRUST PROXY ================= */
+
 app.set("trust proxy", 1);
-// Middleware to handle cors
+
+/* ================= CORS FIX ================= */
+
+const allowedOrigins = [
+  process.env.FRONT_END_URL,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.FRONT_END_URL || "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: function (origin, callback) {
+      // allow requests with no origin
+      // mobile apps / postman / curl
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      // exact match
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // allow all vercel domains
+      if (origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      console.log("Blocked by CORS:", origin);
+
+      // instead of throwing error
+      return callback(null, false);
+    },
+
     credentials: true,
+
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+    ],
   }),
 );
-app.use((req, res, next) => {
-  console.log("backend connected");
-  next();
-});
-// Middleware to handle JSON object in req body
-app.use(express.json());
 
+/* ================= MIDDLEWARE ================= */
+
+app.use(express.json());
 app.use(cookieParser());
 
-app.listen(3000, () => {
-  console.log("Server is running on port 3000!");
-});
+/* ================= STATIC ================= */
+
+app.use("/uploads", express.static(uploadsPath));
+
+/* ================= ROUTES ================= */
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/reports", reportRoutes);
 
-// serve static files from "uploads" folder
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+/* ================= TEST ROUTE ================= */
+
+app.get("/api", (req, res) => {
+  res.json({
+    success: true,
+    message: "API is running",
+  });
+});
+
+/* ================= ERROR HANDLER ================= */
 
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
+  console.error(err);
 
-  const message = err.message || "Internal Server Error";
+  const statusCode = err.statusCode || 500;
 
   res.status(statusCode).json({
     success: false,
-    statusCode,
-    message,
+    message: err.message || "Internal Server Error",
   });
+});
+
+/* ================= SERVER ================= */
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
