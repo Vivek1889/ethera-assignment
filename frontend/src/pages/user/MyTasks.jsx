@@ -1,63 +1,70 @@
-import React, { useEffect, useState } from "react"
-import DashboardLayout from "../../components/DashboardLayout"
-import { useNavigate } from "react-router-dom"
-import axiosInstance from "../../utils/axioInstance"
-import TaskStatusTabs from "../../components/TaskStatusTabs"
-import { FaFileLines } from "react-icons/fa6"
-import TaskCard from "../../components/TaskCard"
-import toast from "react-hot-toast"
+import React, { useEffect, useState } from "react";
+import DashboardLayout from "../../components/DashboardLayout";
+import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../utils/axioInstance";
+import TaskStatusTabs from "../../components/TaskStatusTabs";
+import { FaFileLines } from "react-icons/fa6";
+import TaskCard from "../../components/TaskCard";
+import toast from "react-hot-toast";
+import Loader from "../../components/Loader";
 
 const MyTask = () => {
-  const [allTasks, setAllTasks] = useState([])
+  const [allTasks, setAllTasks] = useState([]);
   const [tabs, setTabs] = useState([
     { label: "All", count: 0 },
     { label: "Pending", count: 0 },
     { label: "In Progress", count: 0 },
     { label: "Completed", count: 0 },
-  ])
-  const [filterStatus, setFilterStatus] = useState("All")
-
+  ]);
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [loading, setLoading] = useState(false);
   // console.log(tabs)
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const getAllTasks = async () => {
     try {
+      setLoading(true);
       const response = await axiosInstance.get("/tasks", {
         params: {
           status: filterStatus === "All" ? "" : filterStatus,
         },
-      })
+      });
 
       if (response?.data) {
-        setAllTasks(response.data?.tasks?.length > 0 ? response.data.tasks : [])
+        setAllTasks(
+          response.data?.tasks?.length > 0 ? response.data.tasks : [],
+        );
       }
 
-      const statusSummary = response.data?.statusSummary || {}
+      const statusSummary = response.data?.statusSummary || {};
 
       setTabs([
         { label: "All", count: statusSummary.all || 0 },
         { label: "Pending", count: statusSummary.pendingTasks || 0 },
         { label: "In Progress", count: statusSummary.inProgressTasks || 0 },
         { label: "Completed", count: statusSummary.completedTasks || 0 },
-      ])
+      ]);
     } catch (error) {
-      console.log("Error fetching tasks: ", error)
+      console.log("Error fetching tasks: ", error);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   const handleClick = (taskId) => {
-    navigate(`/user/task-details/${taskId}`)
-  }
+    navigate(`/user/task-details/${taskId}`);
+  };
 
   useEffect(() => {
-    getAllTasks(filterStatus)
+    getAllTasks(filterStatus);
 
-    return () => {}
-  }, [filterStatus])
+    return () => {};
+  }, [filterStatus]);
 
   return (
     <DashboardLayout activeMenu={"My Tasks"}>
+      {loading && <Loader></Loader>}
       <div className="my-6 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
           <div className="flex items-center justify-between gap-4 w-full md:w-auto ">
@@ -88,7 +95,7 @@ const MyTask = () => {
                 createdAt={item.createdAt}
                 dueDate={item.dueDate}
                 assignedTo={item.assignedTo?.map(
-                  (item) => item.profileImageUrl
+                  (item) => item.profileImageUrl,
                 )}
                 attachmentCount={item.attachments?.length || 0}
                 completedTodoCount={item.completedTodoCount || 0}
@@ -106,7 +113,7 @@ const MyTask = () => {
         </div>
       </div>
     </DashboardLayout>
-  )
-}
+  );
+};
 
-export default MyTask
+export default MyTask;
