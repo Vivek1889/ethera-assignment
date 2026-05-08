@@ -4,23 +4,16 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
 import taskRoutes from "./routes/task.route.js";
 import reportRoutes from "./routes/report.route.js";
+import { fileURLToPath } from "url";
+
 dotenv.config();
-const app = express();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const uploadsPath = path.join(__dirname, "uploads");
-
-if (!fs.existsSync(uploadsPath)) {
-  fs.mkdirSync(uploadsPath, { recursive: true });
-}
-
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
@@ -30,61 +23,45 @@ mongoose
     console.log(err);
   });
 
+const app = express();
 app.set("trust proxy", 1);
-
-const allowedOrigins = [
-  process.env.FRONT_END_URL,
-  "http://localhost:5173",
-].filter(Boolean);
-
+// Middleware to handle cors
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        /\.vercel\.app$/.test(origin)
-      ) {
-        callback(null, true);
-      } else {
-        console.log("CORS blocked origin:", origin);
-        callback(new Error(`CORS blocked: ${origin}`));
-      }
-    },
+    origin: process.env.FRONT_END_URL || "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   }),
 );
-
+app.use((req, res, next) => {
+  console.log("backend connected");
+  next();
+});
+// Middleware to handle JSON object in req body
 app.use(express.json());
+
 app.use(cookieParser());
 
-app.use("/uploads", express.static(uploadsPath));
+app.listen(3000, () => {
+  console.log("Server is running on port 3000!");
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/reports", reportRoutes);
 
-app.get("/api", (req, res) => {
-  res.json({
-    success: true,
-    message: "API is running",
-  });
-});
+// serve static files from "uploads" folder
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
 
+  const message = err.message || "Internal Server Error";
+
   res.status(statusCode).json({
     success: false,
     statusCode,
-    message: err.message || "Internal Server Error",
+    message,
   });
-});
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
 });
