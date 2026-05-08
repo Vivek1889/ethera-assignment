@@ -51,7 +51,7 @@ const UserDashboard = () => {
     } catch (error) {
       console.log("Error fetching user dashboard data: ", error);
     } finally {
-      setLoading(true);
+      setLoading(false);
     }
   };
 
