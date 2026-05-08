@@ -1,6 +1,6 @@
-import axios from "axios"
+import axios from "axios";
 
-const BASE_URL = "http://localhost:3000/api"
+const BASE_URL = "https://ethera-assignment-production.up.railway.app/api";
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -10,6 +10,6 @@ const axiosInstance = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
   },
-})
+});
 
-export default axiosInstance
+export default axiosInstance;

@@ -62,7 +62,11 @@ app.use((err, req, res, next) => {
     message,
   });
 });
-
+app.use("/api", (req, res, next) => {
+  res.json({
+    message: "Api is running",
+  });
+});
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
