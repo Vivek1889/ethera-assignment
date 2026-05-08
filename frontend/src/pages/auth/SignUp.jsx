@@ -7,7 +7,7 @@ import { validateEmail } from "../../utils/helper";
 import ProfilePhotoSelector from "../../components/ProfilePhotoSelector";
 import axiosInstance from "../../utils/axioInstance";
 import uploadImage from "../../utils/uploadImage";
-
+import Loader from "../../components/Loader";
 const SignUp = () => {
   const navigate = useNavigate();
 
@@ -19,7 +19,7 @@ const SignUp = () => {
   const [profilePic, setProfilePic] = useState(null);
   const [adminInviteToken, setAdminInviteToken] = useState("");
   const [showAdminInviteToken, setShowAdminInviteToken] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -49,7 +49,7 @@ const SignUp = () => {
         const imageUploadRes = await uploadImage(profilePic);
         profileImageUrl = imageUploadRes.imageUrl || "";
       }
-
+      setLoading(true);
       const response = await axiosInstance.post("/auth/sign-up", {
         name: fullName,
         email,
@@ -67,11 +67,14 @@ const SignUp = () => {
       } else {
         setError("Something went wrong. Please try again!");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <AuthLayout>
+      {loading && <Loader></Loader>}
       <div className="w-full max-w-md">
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
           {/* Gradient top border */}

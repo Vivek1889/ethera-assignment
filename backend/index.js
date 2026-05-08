@@ -12,8 +12,12 @@ import { fileURLToPath } from "url";
 
 dotenv.config();
 
+const app = express();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// MongoDB connection
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
@@ -23,9 +27,9 @@ mongoose
     console.log(err);
   });
 
-const app = express();
+app.set("trust proxy", 1);
 
-// Middleware to handle cors
+// CORS
 app.use(
   cors({
     origin: process.env.FRONT_END_URL || "http://localhost:5173",
@@ -33,27 +37,20 @@ app.use(
     credentials: true,
   }),
 );
-app.use((req, res, next) => {
-  console.log("backend connected");
-  next();
-});
-// Middleware to handle JSON object in req body
-app.use(express.json());
 
+app.use(express.json());
 app.use(cookieParser());
 
-app.listen(3000, () => {
-  console.log("Server is running on port 3000!");
-});
-
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/reports", reportRoutes);
 
-// serve static files from "uploads" folder
+// Static uploads
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// Error middleware
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
 
@@ -64,4 +61,10 @@ app.use((err, req, res, next) => {
     statusCode,
     message,
   });
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

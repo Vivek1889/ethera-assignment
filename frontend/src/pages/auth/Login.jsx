@@ -5,6 +5,7 @@ import { FaEye } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { validateEmail } from "../../utils/helper";
 import axiosInstance from "../../utils/axioInstance";
+import Loader from "../../components/Loader";
 import { useDispatch, useSelector } from "react-redux";
 import {
   signInFailure,
@@ -75,6 +76,7 @@ const Login = () => {
 
   return (
     <AuthLayout>
+      {loading && <Loader></Loader>}
       <div className="w-full max-w-md">
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
           {/* Gradient top border */}

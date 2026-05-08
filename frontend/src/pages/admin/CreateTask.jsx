@@ -13,7 +13,7 @@ import moment from "moment";
 import toast from "react-hot-toast";
 import Modal from "../../components/Modal";
 import DeleteAlert from "../../components/DeleteAlert";
-
+import Loader from "../../components/Loader";
 const CreateTask = () => {
   const location = useLocation();
   const { taskId } = location.state || {};
@@ -60,6 +60,7 @@ const CreateTask = () => {
   // create task
   const createTask = async () => {
     try {
+      setLoading(true);
       const todolist = taskData.todoChecklist?.map((item) => ({
         text: item,
         completed: false,
@@ -79,6 +80,8 @@ const CreateTask = () => {
     } catch (error) {
       console.log("Error creating task: ", error);
       toast.error("Error creating task!");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -202,6 +205,7 @@ const CreateTask = () => {
 
   return (
     <DashboardLayout activeMenu={"Create Task"}>
+      {loading && <Loader></Loader>}
       <div className="p-6">
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-6">
