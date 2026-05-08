@@ -4,20 +4,23 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
 import taskRoutes from "./routes/task.route.js";
 import reportRoutes from "./routes/report.route.js";
-import { fileURLToPath } from "url";
-
 dotenv.config();
-
 const app = express();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// MongoDB connection
+const uploadsPath = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+}
+
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
@@ -29,7 +32,6 @@ mongoose
 
 app.set("trust proxy", 1);
 
-// CORS
 app.use(
   cors({
     origin: process.env.FRONT_END_URL || "http://localhost:5173",
@@ -41,32 +43,30 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// Routes
+app.use("/uploads", express.static(uploadsPath));
+
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/reports", reportRoutes);
 
-// Static uploads
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.get("/api", (req, res) => {
+  res.json({
+    success: true,
+    message: "API is running",
+  });
+});
 
-// Error middleware
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
-
-  const message = err.message || "Internal Server Error";
 
   res.status(statusCode).json({
     success: false,
     statusCode,
-    message,
+    message: err.message || "Internal Server Error",
   });
 });
-app.use("/api", (req, res, next) => {
-  res.json({
-    message: "Api is running",
-  });
-});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
