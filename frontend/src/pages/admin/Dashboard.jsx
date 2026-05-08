@@ -6,7 +6,7 @@ import moment from "moment";
 import { useNavigate } from "react-router-dom";
 import RecentTasks from "../../components/RecentTasks";
 import CustomPieChart from "../../components/CustomPieChart";
-
+import Loader from "../../components/Loader";
 const COLORS = ["#FF6384", "#36A2EB", "#FFCE56"];
 
 const Dashboard = () => {
@@ -17,7 +17,7 @@ const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState([]);
   const [pieChartData, setPieChartData] = useState([]);
   const [barChartData, setBarChartData] = useState([]);
-
+  const [loading, setLoading] = useState(false);
   // prepare data for pie chart
   const prepareChartData = (data) => {
     const taskDistribution = data?.taskDistribution || {};
@@ -42,6 +42,7 @@ const Dashboard = () => {
 
   const getDashboardData = async () => {
     try {
+      setLoading(true);
       const response = await axiosInstance.get("/tasks/dashboard-data");
 
       if (response.data) {
@@ -50,6 +51,8 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.log("Error fetching dashboard data: ", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,6 +64,7 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout activeMenu={"Dashboard"}>
+      {loading && <Loader></Loader>}
       <div className="p-6 space-y-6">
         <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-6 shadow-lg text-white">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">

@@ -1,58 +1,63 @@
-import React, { useEffect, useState } from "react"
-import axiosInstance from "../../utils/axioInstance"
-import DashboardLayout from "../../components/DashboardLayout"
-import { FaFileAlt } from "react-icons/fa"
-import UserCard from "../../components/UserCard"
-import toast from "react-hot-toast"
+import React, { useEffect, useState } from "react";
+import axiosInstance from "../../utils/axioInstance";
+import DashboardLayout from "../../components/DashboardLayout";
+import { FaFileAlt } from "react-icons/fa";
+import UserCard from "../../components/UserCard";
+import toast from "react-hot-toast";
+import Loader from "../../components/Loader";
 
 const ManageUsers = () => {
-  const [allUsers, setAllUsers] = useState([])
-
+  const [allUsers, setAllUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
   const getAllUsers = async () => {
+    setLoading(true);
     try {
-      const response = await axiosInstance.get("/users/get-users")
+      const response = await axiosInstance.get("/users/get-users");
 
       if (response.data?.length > 0) {
-        setAllUsers(response.data)
+        setAllUsers(response.data);
       }
     } catch (error) {
-      console.log("Error fetching users: ", error)
+      console.log("Error fetching users: ", error);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   const handleDownloadReport = async () => {
     try {
       const response = await axiosInstance.get("/reports/export/users", {
         responseType: "blob",
-      })
+      });
 
       // create a url for the blob
-      const url = window.URL.createObjectURL(new Blob([response.data]))
-      const link = document.createElement("a")
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
 
-      link.href = url
+      link.href = url;
 
-      link.setAttribute("download", "user_details.xlsx")
-      document.body.appendChild(link)
+      link.setAttribute("download", "user_details.xlsx");
+      document.body.appendChild(link);
 
-      link.click()
+      link.click();
 
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.log("Error downloading user-details report: ", error)
-      toast.error("Error downloading user-details report. Please try again!")
+      console.log("Error downloading user-details report: ", error);
+      toast.error("Error downloading user-details report. Please try again!");
     }
-  }
+  };
 
   useEffect(() => {
-    getAllUsers()
+    getAllUsers();
 
-    return () => {}
-  }, [])
+    return () => {};
+  }, []);
 
   return (
     <DashboardLayout activeMenu={"Team Members"}>
+      {loading && <Loader></Loader>}
       <div className="mt-5 mb-10">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-medium">Team Members</h2>
@@ -74,7 +79,7 @@ const ManageUsers = () => {
         </div>
       </div>
     </DashboardLayout>
-  )
-}
+  );
+};
 
-export default ManageUsers
+export default ManageUsers;

@@ -1,54 +1,59 @@
-import React, { useEffect, useState } from "react"
-import axiosInstance from "../utils/axioInstance"
-import { useDispatch, useSelector } from "react-redux"
-import { signOutSuccess } from "../redux/slice/userSlice"
-import { useNavigate } from "react-router-dom"
-import { SIDE_MENU_DATA, USER_SIDE_MENU_DATA } from "../utils/data"
-
+import React, { useEffect, useState } from "react";
+import axiosInstance from "../utils/axioInstance";
+import { useDispatch, useSelector } from "react-redux";
+import { signOutSuccess } from "../redux/slice/userSlice";
+import { useNavigate } from "react-router-dom";
+import { SIDE_MENU_DATA, USER_SIDE_MENU_DATA } from "../utils/data";
+import Loader from "../components/Loader";
 const SideMenu = ({ activeMenu }) => {
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const [SideMenuData, setSideMenuData] = useState([])
-  const { currentUser } = useSelector((state) => state.user)
+  const [SideMenuData, setSideMenuData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const { currentUser } = useSelector((state) => state.user);
 
   const handleClick = (route) => {
-    console.log(route)
+    console.log(route);
 
     if (route === "logout") {
-      handleLogut()
-      return
+      handleLogut();
+      return;
     }
 
-    navigate(route)
-  }
+    navigate(route);
+  };
 
   const handleLogut = async () => {
     try {
-      const response = await axiosInstance.post("/auth/sign-out")
+      setLoading(true);
+      const response = await axiosInstance.post("/auth/sign-out");
 
       if (response.data) {
-        dispatch(signOutSuccess())
+        dispatch(signOutSuccess());
 
-        navigate("/login")
+        navigate("/login");
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (currentUser) {
       setSideMenuData(
-        currentUser?.role === "admin" ? SIDE_MENU_DATA : USER_SIDE_MENU_DATA
-      )
+        currentUser?.role === "admin" ? SIDE_MENU_DATA : USER_SIDE_MENU_DATA,
+      );
     }
 
-    return () => {}
-  }, [currentUser])
+    return () => {};
+  }, [currentUser]);
 
   return (
     <div className="w-64 p-6 h-full flex flex-col lg:border-r lg:border-gray-200">
+      {loading && <Loader></Loader>}
       <div className="flex flex-col items-center mb-8">
         <div className="w-20 h-20 rounded-full bg-gray-100 overflow-hidden mb-4 border-2 border-blue-200">
           <img
@@ -88,7 +93,7 @@ const SideMenu = ({ activeMenu }) => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default SideMenu
+export default SideMenu;

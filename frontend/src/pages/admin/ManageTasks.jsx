@@ -6,18 +6,19 @@ import TaskStatusTabs from "../../components/TaskStatusTabs";
 import { FaFileLines } from "react-icons/fa6";
 import TaskCard from "../../components/TaskCard";
 import toast from "react-hot-toast";
-
+import Loader from "../../components/Loader";
 const ManageTasks = () => {
   const [allTasks, setAllTasks] = useState([]);
   const [tabs, setTabs] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
-
+  const [loading, setLoading] = useState(false);
   console.log(tabs);
 
   const navigate = useNavigate();
 
   const getAllTasks = async () => {
     try {
+      setLoading(true);
       const response = await axiosInstance.get("/tasks", {
         params: {
           status: filterStatus === "All" ? "" : filterStatus,
@@ -42,6 +43,8 @@ const ManageTasks = () => {
       setTabs(statusArray);
     } catch (error) {
       console.log("Error fetching tasks: ", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -82,6 +85,7 @@ const ManageTasks = () => {
 
   return (
     <DashboardLayout activeMenu={"Manage Task"}>
+      {loading && <Loader></Loader>}
       <div className="my-6 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
           <div className="flex items-center justify-between gap-4 w-full md:w-auto ">
